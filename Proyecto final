@@ -1,0 +1,210 @@
+import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
+import java.util.*;
+/**
+ * Write a description of class Memory here.
+ * 
+ * @author (your name) 
+ * @version (a version number or a date)
+ */
+public class MemoryWorld extends World {
+    private List<Card> cards;
+    private Card firstSelected;
+    private Card secondSelected;
+    private int matchesFound;
+    
+    public MemoryWorld(int level) {
+        super(600, 400, 1);
+        cards = new ArrayList<>();
+        firstSelected = null;
+        secondSelected = null;
+        matchesFound = 0;
+        prepare(level);
+    }
+    
+    private void prepare(int level) {
+        GreenfootImage backImage = new GreenfootImage("back.png");
+        List<GreenfootImage> frontImages = new ArrayList<>();
+        
+        // Cargar las imágenes para las cartas
+        for (int i = 1; i <= level; i++) {
+            frontImages.add(new GreenfootImage("front" + i + ".png"));
+        }
+        
+        // Duplicar las imágenes para crear pares
+        List<GreenfootImage> pairedImages = new ArrayList<>(frontImages);
+        pairedImages.addAll(frontImages);
+        Collections.shuffle(pairedImages);
+        
+        // Crear y agregar las cartas al mundo
+        for (GreenfootImage image : pairedImages) {
+            Card card = new Card(image, backImage);
+            cards.add(card);
+        }
+        
+        // Colocar las cartas en la pantalla
+        int cols = (int) Math.sqrt(cards.size());
+        int rows = (cards.size() + cols - 1) / cols;
+        int cardWidth = getWidth() / cols;
+        int cardHeight = getHeight() / rows;
+        
+        for (int i = 0; i < cards.size(); i++) {
+            int x = (i % cols) * cardWidth + cardWidth / 2;
+            int y = (i / cols) * cardHeight + cardHeight / 2;
+            addObject(cards.get(i), x, y);
+        }
+    }
+    
+    public void act() {
+        if (Greenfoot.mouseClicked(null)) {
+            Actor actor = Greenfoot.getMouseInfo().getActor();
+            if (actor instanceof Card) {
+                Card card = (Card) actor;
+                if (!card.isFlipped() && !card.isMatched()) {
+                    card.flip();
+                    if (firstSelected == null) {
+                        firstSelected = card;
+                    } else if (secondSelected == null) {
+                        secondSelected = card;
+                        checkMatch();
+                    }
+                }
+            }
+        }
+    }
+    
+    private void checkMatch() {
+        if (firstSelected.getFrontImage().equals(secondSelected.getFrontImage())) {
+            firstSelected.setMatched(true);
+            secondSelected.setMatched(true);
+            matchesFound++;
+            if (matchesFound == cards.size() / 2) {
+                showText("¡Ganaste!", getWidth() / 2, getHeight() / 2);
+            }
+        } else {
+            Greenfoot.delay(50);
+            firstSelected.flip();
+            secondSelected.flip();
+        }
+        firstSelected = null;
+        secondSelected = null;
+    }
+}
+
+
+
+
+
+import lang.stride.*;
+import greenfoot.*;
+
+/**
+ * Write a description of class MenuWorld here.
+ * @author (your name) @version (a version number or a date)
+ */
+public class MenuWorld extends World
+{
+
+    /* (World, Actor, GreenfootImage, Greenfoot and MouseInfo)*/
+
+    /**
+     * 
+     */
+    public MenuWorld()
+    {
+        super(600 , 400 , 1);
+        prepareMenu ( );
+    }
+
+    /**
+     * 
+     */
+    private void prepareMenu()
+    {
+        addObject ( new Button ( "Fácil" , 4 ) , getWidth ( ) / 2 , getHeight ( ) / 3 );
+        addObject ( new Button ( "Normal" , 8 ) , getWidth ( ) / 2 , getHeight ( ) / 2 );
+        addObject ( new Button ( "Difícil" , 12 ) , getWidth ( ) / 2 , getHeight ( ) * 2 / 3 );
+    }
+}
+
+
+
+
+
+import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
+
+/**
+ * Write a description of class Button here.
+ * 
+ * @author (your name) 
+ * @version (a version number or a date)
+ */
+public class Button extends Actor {
+    private String label;
+    private int level;
+    
+    public Button(String label, int level) {
+        this.label = label;
+        this.level = level;
+        GreenfootImage image = new GreenfootImage(label, 24, Color.WHITE, Color.BLACK);
+        setImage(image);
+    }
+    
+    public void act() {
+        if (Greenfoot.mouseClicked(this)) {
+            Greenfoot.setWorld(new MemoryWorld(level));
+        }
+    }
+}
+
+
+
+
+import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
+
+/**
+ * Write a description of class Card here.
+ * 
+ * @author (your name) 
+ * @version (a version number or a date)
+ */
+public class Card extends Actor {
+    private GreenfootImage frontImage;
+    private GreenfootImage backImage;
+    private boolean isFlipped;
+    private boolean matched;
+    
+    public Card(GreenfootImage frontImage, GreenfootImage backImage) {
+        this.frontImage = frontImage;
+        this.backImage = backImage;
+        setImage(backImage);
+        isFlipped = false;
+        matched = false;
+    }
+    
+    public void flip() {
+        if (!matched) {
+            if (isFlipped) {
+                setImage(backImage);
+            } else {
+                setImage(frontImage);
+            }
+            isFlipped = !isFlipped;
+        }
+    }
+    
+    public boolean isFlipped() {
+        return isFlipped;
+    }
+    
+    public boolean isMatched() {
+        return matched;
+    }
+    
+    public void setMatched(boolean matched) {
+        this.matched = matched;
+    }
+    
+    public GreenfootImage getFrontImage() {
+        return frontImage;
+    }
+}
